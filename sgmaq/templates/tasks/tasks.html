@@ -44,4 +44,82 @@
     
 
 
+
+
+
+    <script>
+        document.getElementById('washForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            let formData = new FormData(this);
+            let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            let spinner = document.getElementById('spinner');
+            let resultDiv = document.getElementById('result');
+            let alertDiv = resultDiv.querySelector('.alert');
+            let licensePlateText = document.getElementById('licensePlateText');
+    
+            // Mostrar spinner
+            spinner.style.display = 'block';
+    
+            fetch("{% url 'register_wash' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ocultar spinner
+                spinner.style.display = 'none';
+    
+                if (data.success) {
+                    alertDiv.classList.remove('alert-danger');
+                    alertDiv.classList.add('alert-info');
+                    alertDiv.textContent = `Matrícula detectada: ${data.license_plate_text}`;
+                    licensePlateText.value = data.license_plate_text;
+
+                    // Acceder a los valores de exif_data
+                    console.log(data.exif_data);
+                    let datetime = data.exif_data.datetime;
+                    let latitude = data.exif_data.latitude;
+                    let longitude = data.exif_data.longitude;
+
+                    // Mostrar los valores en consola
+                    console.log("Fecha y Hora:", datetime);
+                    console.log("Latitud:", latitude);
+                    console.log("Longitud:", longitude);
+    
+                    // Store the image URL in a data attribute for later use
+                    licensePlateText.setAttribute('data-image-url', data.image_url);
+
+                    // Store metadata info for later use
+                    licensePlateText.setAttribute('data-image-datetime', datetime);
+                    licensePlateText.setAttribute('data-image-lat', latitude);
+                    licensePlateText.setAttribute('data-image-long', longitude);
+
+
+
+                } else {
+                    alertDiv.classList.remove('alert-info');
+                    alertDiv.classList.add('alert-danger');
+                    alertDiv.textContent = 'No se pudo detectar la matrícula. Por favor, intente nuevamente.';
+                    licensePlateText.value = '';
+                }
+    
+                resultDiv.style.display = 'block';
+            })
+            .catch(error => {
+                // Ocultar spinner
+                spinner.style.display = 'none';
+                alertDiv.classList.remove('alert-info');
+                alertDiv.classList.add('alert-danger');
+                alertDiv.textContent = 'Hubo un error al procesar la solicitud. Por favor, intente nuevamente.';
+                console.error('Error:', error);
+            });
+        });
+    
+    </script>
+
 {% endblock %}

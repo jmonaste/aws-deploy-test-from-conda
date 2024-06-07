@@ -11,5 +11,11 @@ urlpatterns = [
     path('signout/', views.signout, name="logout"),
 
     path('tasks/', views.tasks, name="tasks"),
+    path('register_wash/', views.register_wash, name='register_wash'),
+
+
 
 ] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
