@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Task(models.Model):
-    license_plate = models.CharField(max_length=100) # vehicle id num - número único de cada vehículo fabricado, por todas las marcas a nivel internacional - regulado por la norma ISO 3833
+    license_plate = models.CharField(max_length=20) # vehicle id num - número único de cada vehículo fabricado, por todas las marcas a nivel internacional - regulado por la norma ISO 3833
     comment = models.TextField(blank=True)
     license_plate_image = models.ImageField(upload_to = 'images/', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)

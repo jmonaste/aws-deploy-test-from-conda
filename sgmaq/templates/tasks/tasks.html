@@ -119,6 +119,63 @@
                 console.error('Error:', error);
             });
         });
+
+
+        document.getElementById('registerTask').addEventListener('click', function() {
+            let licensePlateText = document.getElementById('licensePlateText').value;
+            let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            let alertDiv = document.querySelector('#result .alert');
+    
+            // Retrieve the image URL from the data attribute
+            let imageUrl = document.getElementById('licensePlateText').getAttribute('data-image-url');
+
+            let imgDatetime = document.getElementById('licensePlateText').getAttribute('data-image-datetime');
+            let imgLat = document.getElementById('licensePlateText').getAttribute('data-image-lat');
+            let imgLong = document.getElementById('licensePlateText').getAttribute('data-image-long');
+
+    
+            fetch("{% url 'create_task' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    'license_plate': licensePlateText,
+                    'imgPathDiv': imageUrl,
+                    'imgDatetime': imgDatetime,
+                    'imgLat': imgLat,
+                    'imgLong': imgLong
+
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alertDiv.classList.remove('alert-danger');
+                    alertDiv.classList.add('alert-info');
+                    alertDiv.textContent = 'Tarea registrada exitosamente.';
+    
+                    // Mostrar la imagen cargada
+                    let uploadedImageDiv = document.getElementById('uploadedImage');
+                    let uploadedImageView = document.getElementById('uploadedImageView');
+                    
+                    uploadedImageView.src = imageUrl;
+                    uploadedImageDiv.style.display = 'block';
+                } else {
+                    alertDiv.classList.remove('alert-info');
+                    alertDiv.classList.add('alert-danger');
+                    alertDiv.textContent = 'Error al registrar la tarea. Por favor, intente nuevamente.';
+                }
+            })
+            .catch(error => {
+                alertDiv.classList.remove('alert-info');
+                alertDiv.classList.add('alert-danger');
+                alertDiv.textContent = 'Hubo un error al procesar la solicitud. Por favor, intente nuevamente.';
+                console.error('Error:', error);
+            });
+        });
     
     </script>
 

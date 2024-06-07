@@ -8,11 +8,13 @@ from django.contrib.auth.decorators import login_required
 from PIL import Image
 import piexif
 from django.http import JsonResponse
+import json
 import os
+from datetime import datetime
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
-
+from .models import Task
 
 
 def index(request):
@@ -163,7 +165,23 @@ def handle_uploaded_file(f):
         print(f"Error uploading file: {e}")
         raise
 
-    
+def convert_datetime_format(exif_datetime):
+    """
+    Convierte una fecha y hora en formato EXIF (YYYY:MM:DD HH:MM:SS)
+    a un formato aceptado por Django (YYYY-MM-DD HH:MM:SS).
+    """
+    try:
+        # Convertir la cadena de fecha y hora de EXIF a un objeto datetime
+        dt = datetime.strptime(exif_datetime, "%Y:%m:%d %H:%M:%S")
+        # Convertir el objeto datetime a una cadena en el formato aceptado por Django
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError as e:
+        print(f"Error al convertir el formato de fecha y hora: {e}")
+        return None
+
+
+
+
 @login_required
 @csrf_exempt
 def register_wash(request):
@@ -192,5 +210,42 @@ def register_wash(request):
             })
         else:
             return JsonResponse({'success': False, 'error': 'No se pudo detectar la matrícula.'})
+
+    return JsonResponse({'success': False, 'error': 'Solicitud inválida.'})
+
+
+
+
+@csrf_exempt
+@login_required
+def create_task(request):
+    if request.method == 'POST' and is_ajax(request):
+        data = json.loads(request.body)
+        license_plate = data.get('license_plate')
+
+        # Retrieve uploaded image path from session
+        uploaded_image = request.session.get('uploaded_image_path')
+
+        # Obtén los metadatos EXIF
+        license_plate_img_datetime = data.get('imgDatetime')
+        license_plate_img_lat = data.get('imgLat')
+        license_plate_img_long = data.get('imgLong')
+
+        if license_plate and uploaded_image and request.user.is_authenticated:
+            task = Task.objects.create(
+                license_plate=license_plate,
+                comment="generado automáticamente",
+                license_plate_image=uploaded_image,
+                created=datetime.now(),
+                datecompleted=datetime.now(),
+                employee_user=request.user,
+                img_datetime=convert_datetime_format(license_plate_img_datetime),
+                img_lat=license_plate_img_lat,
+                img_long=license_plate_img_long,
+
+            )
+            return JsonResponse({'success': True, 'task_id': task.id})
+        else:
+            return JsonResponse({'success': False, 'error': 'Datos inválidos o usuario no autenticado.'})
 
     return JsonResponse({'success': False, 'error': 'Solicitud inválida.'})
