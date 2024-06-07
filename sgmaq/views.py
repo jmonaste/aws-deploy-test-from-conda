@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
+from django.views.decorators.csrf import csrf_protect
+
 
 def index(request):
     return render(request, 'global/index.html')
@@ -10,6 +12,7 @@ def index(request):
 def about(request):
     return render(request, 'global/about.html')
 
+@csrf_protect
 def signup(request):
     if request.method == 'GET':
         return render(request, 'global/signup.html', {"form": UserCreationForm})
@@ -27,6 +30,7 @@ def signup(request):
 
         return render(request, 'global/signup.html', {"form": UserCreationForm, "error": "Passwords did not match."})
 
+@csrf_protect
 def signin(request):
     if request.method == 'GET':
         return render(request, 'global/signin.html', {"form": AuthenticationForm})
@@ -38,8 +42,13 @@ def signin(request):
 
         login(request, user)
         return redirect('index')
-    
+
+@csrf_protect    
 def signout(request):
     logout(request)
     return redirect('index')
 
+
+
+def tasks(request):
+    return render(request, 'tasks/tasks.html')

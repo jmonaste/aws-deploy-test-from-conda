@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['.awsapprunner.com', '127.0.0.1', 'localhost']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://khxmcpumyg.eu-west-3.awsapprunner.com',
+]
+
 
 # Application definition
 
