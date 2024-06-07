@@ -1,0 +1,17 @@
+{% extends 'layouts/base.html' %} {% load static %} {% block content %}
+
+<main class="container py-5">
+  <div class="hero d-flex flex-column justify-content-center align-items-center">
+    <h1>Signin</h1>
+
+    {{error}}
+
+    <form action="/signin/" method="POST">
+      {% csrf_token %} 
+      {{form.as_p}}
+      <button>Signin</button>
+    </form>
+  </div>
+</main>
+
+{% endblock %}

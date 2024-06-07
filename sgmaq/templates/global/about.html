@@ -1,0 +1,40 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+
+    <div class="container py-5">
+
+        <h1>Ventajas</h1>
+        <p>Nuestras soluciones poseen ventajas 100% orientadas al negocio, con el fin de que nuestros clientes tengan la más alta eficiencia operacional, junto con la reducción y optimización de presupuestos.</p>
+
+        <h2>Cómo usar la aplicación</h2>
+        <p>Nuestra aplicación de gestión de lavados de coches es intuitiva y fácil de usar. Aquí te mostramos los pasos para sacarle el máximo provecho:</p>
+
+        <h3>Paso 1: Toma una foto de la matrícula</h3>
+        <p>Cada empleado debe tomar una foto de la matrícula del coche que va a lavar. La aplicación utiliza tecnología de reconocimiento de matrículas para identificar el vehículo.</p>
+        <div class="text-center mb-4">
+            <img src="{% static 'take-photo.jpg' %}" class="img-fluid rounded" alt="Tomar foto de matrícula"></div>
+        </div>
+
+        <h3>Paso 2: Registro automático del lavado</h3>
+        <p>Una vez tomada la foto, la aplicación registra automáticamente el lavado, incluyendo la geolocalización del centro de lavado y la hora del servicio.</p>
+        <div class="text-center mb-4">
+            <img src="{% static 'analytics.jpg' %}" class="img-fluid rounded" alt="Registro automático del lavado">
+        </div>
+
+        <h3>Paso 3: Seguimiento y conteo</h3>
+        <p>La aplicación lleva un conteo de todos los lavados realizados en todos los centros del país, permitiéndote visualizar el rendimiento y el historial de cada centro en tiempo real.</p>
+        <div class="text-center mb-4">
+            <img src="{% static 'dashboard.jpg' %}" class="img-fluid rounded" alt="Seguimiento y conteo">
+        </div>
+
+        <h3>Paso 4: Resumen y facturación</h3>
+        <p>Al final del día, la aplicación genera un resumen detallado de los lavados realizados, facilitando la facturación y la gestión administrativa.</p>
+        <div class="text-center mb-4">
+            <img src="{% static 'invoice.jpg' %}" class="img-fluid rounded" alt="Resumen y facturación">
+        </div>
+
+        <p>Website created by SGMAQ</p>
+    </div>
+
+{% endblock %}
