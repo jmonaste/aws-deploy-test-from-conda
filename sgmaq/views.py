@@ -15,6 +15,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
 from .models import Task
+from django.db.models import Count
 
 
 def index(request):
@@ -249,3 +250,35 @@ def create_task(request):
             return JsonResponse({'success': False, 'error': 'Datos inválidos o usuario no autenticado.'})
 
     return JsonResponse({'success': False, 'error': 'Solicitud inválida.'})
+
+
+
+
+@login_required
+def task_overview(request):
+    tasks = Task.objects.all()
+    # Recuento por días
+    task_counts = tasks.extra({'datecreated': "date(created)"}).values('datecreated').annotate(count=Count('id')).order_by('datecreated')
+
+    task_data = []
+    for task in tasks:
+        task_data.append({
+            'id': task.id,
+            'license_plate': task.license_plate,
+            'comment': task.comment,
+            'license_plate_image': str(task.license_plate_image.url),
+            'created': str(task.created),
+            'datecompleted': str(task.datecompleted),
+            'employee_user_id': task.employee_user_id,
+            'img_datetime': str(task.img_datetime),
+            'img_lat': task.img_lat,
+            'img_long': task.img_long
+        })
+
+    task_counts_list = list(task_counts)  # Convert QuerySet to list
+
+    return render(request, 'tasks/task_overview.html', {
+        'tasks': tasks,
+        'task_data_json': json.dumps(task_data),
+        'task_counts': json.dumps(task_counts_list),  # Pass as JSON string
+    })

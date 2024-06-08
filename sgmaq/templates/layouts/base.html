@@ -42,11 +42,28 @@
                         <a href="{% url 'tasks' %}" class="nav-link">Registrar lavado</a>
                     </li>
                   
+                        <!-- Sólo perfil admin/manager-->
+                        {% if request.user|has_group:"manager" or request.user|has_group:"admin" %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Panel
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                    <li><a class="dropdown-item" href="{% url 'task_overview' %}">Resumen</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'index' %}">Descarga factura</a></li>
+                                </ul>
+                            </li>     
+                        {% endif %}
 
                     <li class="nav-item">
                         <a href="{% url 'logout' %}" class="nav-link">Logout</a>
                     </li> 
-                    
+
+                <!-- Si está logado-->
+
+
+
+
                 <!-- Si no está logado-->
                 {% else %}
                     <li class="nav-item">
@@ -56,6 +73,7 @@
                         <a href="{% url 'signin' %}" class="nav-link">Signin</a>
                     </li>    
                 {% endif %}
+                <!-- Si no está logado-->
 
             </ul>
           </div>

@@ -1,0 +1,127 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4 text-center">Resumen de la operación</h1>
+    
+    <h2 class="mb-3">Listado de lavados</h2>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Patente</th>
+                    <th>Imagen</th>
+                    <th>Creada el</th>
+                    <th>Lavado el</th>
+                    <th>Empleado</th>
+                    <th>Fecha de la foto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ task.license_plate }}</td>
+                    <td><img src="{{ task.license_plate_image }}" alt="Image" class="img-thumbnail" width="100"></td>
+                    <td>{{ task.created }}</td>
+                    <td>{{ task.datecompleted }}</td>
+                    <td>{{ task.employee_user_id }}</td>
+                    <td>{{ task.img_datetime }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="mb-3">Geolocalización de los lavados</h2>
+    <div id="map" style="height: 400px; width: 100%;" class="mb-4 border rounded"></div>
+
+    <h2 class="mb-3">Recuento por días</h2>
+    <div class="card">
+        <div class="card-body">
+            <canvas id="taskChart"></canvas>
+        </div>
+    </div>
+
+    <script id="task-data-json" type="application/json">
+        {{ task_data_json|safe }}
+    </script>
+    <script id="task-counts-json" type="application/json">
+        {{ task_counts|safe }}
+    </script>
+</div>
+
+<!-- Include Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<!-- Include Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Include Moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<!-- Include Chart.js and the Date Adapter for Moment.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+<!-- Include Leaflet.js -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    window.onload = function() {
+        // Set the path for the marker icons
+        L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.7.1/dist/images/';
+
+        // Initialize the map
+        var map = L.map('map').setView([40.416775, -3.703790], 12);  // Centered on Madrid
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        // Add markers
+        var taskData = JSON.parse(document.getElementById('task-data-json').textContent);
+        taskData.forEach(task => {
+            if (task.img_lat && task.img_long) {
+                L.marker([task.img_lat, task.img_long])
+                    .addTo(map)
+                    .bindPopup(`ID: ${task.id}<br>License Plate: ${task.license_plate}<br>Datetime: ${task.img_datetime}`);
+            }
+        });
+
+        // Invalidate size to ensure the map is displayed correctly
+        map.invalidateSize();
+
+        // Task Count by Day Chart
+        var ctx = document.getElementById('taskChart').getContext('2d');
+        var taskCounts = JSON.parse(document.getElementById('task-counts-json').textContent);
+        var dates = taskCounts.map(item => item.datecreated);
+        var counts = taskCounts.map(item => item.count);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Task Count',
+                    data: counts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    };
+</script>
+{% endblock %}
