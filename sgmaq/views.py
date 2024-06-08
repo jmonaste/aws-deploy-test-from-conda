@@ -10,7 +10,7 @@ import piexif
 from django.http import JsonResponse
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -275,7 +275,10 @@ def task_overview(request):
             'img_long': task.img_long
         })
 
-    task_counts_list = list(task_counts)  # Convert QuerySet to list
+    task_counts_list = [
+        {'datecreated': item['datecreated'].isoformat() if isinstance(item['datecreated'], (datetime, date)) else item['datecreated'], 'count': item['count']}
+        for item in task_counts
+    ]
 
     return render(request, 'tasks/task_overview.html', {
         'tasks': tasks,
