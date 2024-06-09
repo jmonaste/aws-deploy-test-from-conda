@@ -27,6 +27,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 
 
+
 def index(request):
     return render(request, 'global/index.html')
 
