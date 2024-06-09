@@ -1,0 +1,10 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4 text-center">Descargar lista de lavados</h1>
+    <div class="text-center">
+        <a href="{% url 'generate_pdf' %}" class="btn btn-primary">Descargar</a>
+    </div>
+</div>
+{% endblock %}

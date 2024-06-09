@@ -15,6 +15,8 @@ urlpatterns = [
     path('create_task/', views.create_task, name='create_task'),
     path('task_overview/', views.task_overview, name="task_overview"),
 
+    path('download/', views.download_page, name='download_page'),
+    path('download_pdf/', views.generate_pdf, name='generate_pdf'),
 ] 
 
 if settings.DEBUG:
