@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib.auth.decorators import login_required
-from PIL import Image
+from PIL import Image as ImagePIL
 import piexif
 from django.http import HttpResponse, JsonResponse
 from django.http import JsonResponse
@@ -18,11 +18,13 @@ from django.conf import settings
 from .models import Task
 from django.db.models import Count
 from django.templatetags.static import static
+from django.utils import timezone
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import Image as ImageReportlab
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 
@@ -102,7 +104,7 @@ def get_exif_data(image_path):
         "longitude": None,
     }
     try:
-        img = Image.open(image_path)
+        img = ImagePIL.open(image_path)
         exif_dict = piexif.load(img.info['exif'])
         
         # Fecha y hora
@@ -132,7 +134,7 @@ def get_exif_data_from_file(f):
         "longitude": None,
     }
     try:
-        img = Image.open(f)
+        img = ImagePIL.open(f)
         exif_dict = piexif.load(img.info['exif'])
 
         # Fecha y hora
@@ -175,16 +177,19 @@ def handle_uploaded_file(f):
         print(f"Error uploading file: {e}")
         raise
 
+# Modificación de la función convert_datetime_format
 def convert_datetime_format(exif_datetime):
     """
     Convierte una fecha y hora en formato EXIF (YYYY:MM:DD HH:MM:SS)
-    a un formato aceptado por Django (YYYY-MM-DD HH:MM:SS).
+    a un formato aceptado por Django (YYYY-MM-DD HH:MM:SS) y consciente de la zona horaria.
     """
     try:
-        # Convertir la cadena de fecha y hora de EXIF a un objeto datetime
+        # Convertir la cadena de fecha y hora de EXIF a un objeto datetime naive
         dt = datetime.strptime(exif_datetime, "%Y:%m:%d %H:%M:%S")
+        # Hacer consciente el objeto datetime con la zona horaria actual
+        aware_dt = timezone.make_aware(dt, timezone.get_current_timezone())
         # Convertir el objeto datetime a una cadena en el formato aceptado por Django
-        return dt.strftime("%Y-%m-%d %H:%M:%S")
+        return aware_dt.strftime("%Y-%m-%d %H:%M:%S")
     except ValueError as e:
         print(f"Error al convertir el formato de fecha y hora: {e}")
         return None
@@ -246,13 +251,12 @@ def create_task(request):
                 license_plate=license_plate,
                 comment="generado automáticamente",
                 license_plate_image=uploaded_image,
-                created=datetime.now(),
-                datecompleted=datetime.now(),
+                created=timezone.now(),
+                datecompleted=timezone.now(),
                 employee_user=request.user,
-                img_datetime=convert_datetime_format(license_plate_img_datetime),
+                img_datetime=timezone.make_aware(datetime.strptime(license_plate_img_datetime, "%Y:%m:%d %H:%M:%S"), timezone.get_current_timezone()) if license_plate_img_datetime else None,
                 img_lat=license_plate_img_lat,
                 img_long=license_plate_img_long,
-
             )
             return JsonResponse({'success': True, 'task_id': task.id})
         else:
@@ -310,7 +314,7 @@ def generate_pdf(request):
 
     # Agregar el logo
     logo_path = os.path.join(settings.BASE_DIR, 'sgmaq', 'static', 'logo-footer.png')
-    elements.append(Image(logo_path, width=2*inch, height=1*inch))
+    elements.append(ImageReportlab(logo_path, width=2*inch, height=1*inch))
 
     # Añadir el título del documento
     styles = getSampleStyleSheet()
@@ -353,8 +357,6 @@ def generate_pdf(request):
     doc.build(elements, onFirstPage=add_header_footer, onLaterPages=add_header_footer)
 
     return response
-
-
 
 @login_required
 def download_page(request):

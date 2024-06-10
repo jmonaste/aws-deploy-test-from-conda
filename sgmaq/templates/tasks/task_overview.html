@@ -82,7 +82,7 @@
         // Add markers
         var taskData = JSON.parse(document.getElementById('task-data-json').textContent);
         taskData.forEach(task => {
-            if (task.img_lat !== null && task.img_long !== null) {
+            if (task.img_lat !== null && task.img_long !== null && task.img_lat !== 'null' && task.img_long !== 'null' && task.img_lat !== '' && task.img_long !== '') {
                 L.marker([task.img_lat, task.img_long])
                     .addTo(map)
                     .bindPopup(`ID: ${task.id}<br>License Plate: ${task.license_plate}<br>Datetime: ${task.img_datetime}`);

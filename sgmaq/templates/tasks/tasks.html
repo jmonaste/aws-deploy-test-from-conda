@@ -26,7 +26,7 @@
     <div id="result" class="mt-4" style="display: none;">
         <div class="alert alert-info" role="alert"></div>
         <div class="mt-3">
-            <label for="licensePlateText" class="form-label">Texto de la Matrícula Detectada</label>
+            <label for="licensePlateText" class="form-label">Patente del vehículo</label>
             <input type="text" class="form-control" id="licensePlateText" name="license_plate_text">
         </div>
         <button id="registerTask" class="btn btn-success mt-3">Registrar</button>
@@ -41,26 +41,49 @@
             <p><strong>Longitud:</strong> <span id="imageLongitude"></span></p>
         </div>
     </div>
-    
 
+    <!-- Modal for success message -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Registro Exitoso</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    La matrícula ha sido registrada exitosamente.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+</div>
 
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-
-    <script>
-        document.getElementById('washForm').addEventListener('submit', function(event) {
+<script>
+    $(document).ready(function() {
+        $('#washForm').on('submit', function(event) {
             event.preventDefault();
-    
+
             let formData = new FormData(this);
-            let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            let spinner = document.getElementById('spinner');
-            let resultDiv = document.getElementById('result');
-            let alertDiv = resultDiv.querySelector('.alert');
-            let licensePlateText = document.getElementById('licensePlateText');
-    
+            let csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+            let spinner = $('#spinner');
+            let resultDiv = $('#result');
+            let alertDiv = resultDiv.find('.alert');
+            let licensePlateText = $('#licensePlateText');
+
             // Mostrar spinner
-            spinner.style.display = 'block';
-    
+            spinner.show();
+
             fetch("{% url 'register_wash' %}", {
                 method: 'POST',
                 body: formData,
@@ -72,13 +95,11 @@
             .then(response => response.json())
             .then(data => {
                 // Ocultar spinner
-                spinner.style.display = 'none';
-    
+                spinner.hide();
+
                 if (data.success) {
-                    alertDiv.classList.remove('alert-danger');
-                    alertDiv.classList.add('alert-info');
-                    alertDiv.textContent = `Matrícula detectada: ${data.license_plate_text}`;
-                    licensePlateText.value = data.license_plate_text;
+                    alertDiv.removeClass('alert-danger').addClass('alert-info').text('Por favor, introduzca la matrícula manualmente.');
+                    licensePlateText.val(data.license_plate_text);
 
                     // Acceder a los valores de exif_data
                     console.log(data.exif_data);
@@ -90,50 +111,43 @@
                     console.log("Fecha y Hora:", datetime);
                     console.log("Latitud:", latitude);
                     console.log("Longitud:", longitude);
-    
-                    // Store the image URL in a data attribute for later use
-                    licensePlateText.setAttribute('data-image-url', data.image_url);
 
-                    // Store metadata info for later use
-                    licensePlateText.setAttribute('data-image-datetime', datetime);
-                    licensePlateText.setAttribute('data-image-lat', latitude);
-                    licensePlateText.setAttribute('data-image-long', longitude);
+                    // Guardar la URL de la imagen en un atributo de datos para su uso posterior
+                    licensePlateText.attr('data-image-url', data.image_url);
 
-
+                    // Guardar la información de los metadatos para su uso posterior
+                    licensePlateText.attr('data-image-datetime', datetime);
+                    licensePlateText.attr('data-image-lat', latitude);
+                    licensePlateText.attr('data-image-long', longitude);
 
                 } else {
-                    alertDiv.classList.remove('alert-info');
-                    alertDiv.classList.add('alert-danger');
-                    alertDiv.textContent = 'No se pudo detectar la matrícula. Por favor, intente nuevamente.';
-                    licensePlateText.value = '';
+                    alertDiv.removeClass('alert-info').addClass('alert-danger').text('No se pudo detectar la matrícula. Por favor, intente nuevamente.');
+                    licensePlateText.val('');
                 }
-    
-                resultDiv.style.display = 'block';
+
+                resultDiv.show();
             })
             .catch(error => {
                 // Ocultar spinner
-                spinner.style.display = 'none';
-                alertDiv.classList.remove('alert-info');
-                alertDiv.classList.add('alert-danger');
-                alertDiv.textContent = 'Hubo un error al procesar la solicitud. Por favor, intente nuevamente.';
+                spinner.hide();
+                alertDiv.removeClass('alert-info').addClass('alert-danger').text('Hubo un error al procesar la solicitud. Por favor, intente nuevamente.');
                 console.error('Error:', error);
             });
         });
 
+        $('#registerTask').on('click', function() {
+            let licensePlateText = $('#licensePlateText').val();
+            let csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+            let alertDiv = $('#result .alert');
+            let resultDiv = $('#result');
 
-        document.getElementById('registerTask').addEventListener('click', function() {
-            let licensePlateText = document.getElementById('licensePlateText').value;
-            let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            let alertDiv = document.querySelector('#result .alert');
-    
-            // Retrieve the image URL from the data attribute
-            let imageUrl = document.getElementById('licensePlateText').getAttribute('data-image-url');
+            // Recuperar la URL de la imagen del atributo de datos
+            let imageUrl = $('#licensePlateText').attr('data-image-url');
 
-            let imgDatetime = document.getElementById('licensePlateText').getAttribute('data-image-datetime');
-            let imgLat = document.getElementById('licensePlateText').getAttribute('data-image-lat');
-            let imgLong = document.getElementById('licensePlateText').getAttribute('data-image-long');
+            let imgDatetime = $('#licensePlateText').attr('data-image-datetime');
+            let imgLat = $('#licensePlateText').attr('data-image-lat');
+            let imgLong = $('#licensePlateText').attr('data-image-long');
 
-    
             fetch("{% url 'create_task' %}", {
                 method: 'POST',
                 headers: {
@@ -147,36 +161,60 @@
                     'imgDatetime': imgDatetime,
                     'imgLat': imgLat,
                     'imgLong': imgLong
-
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alertDiv.classList.remove('alert-danger');
-                    alertDiv.classList.add('alert-info');
-                    alertDiv.textContent = 'Tarea registrada exitosamente.';
-    
+                    alertDiv.removeClass('alert-danger').addClass('alert-info').text('Tarea registrada exitosamente.');
+
                     // Mostrar la imagen cargada
-                    let uploadedImageDiv = document.getElementById('uploadedImage');
-                    let uploadedImageView = document.getElementById('uploadedImageView');
-                    
-                    uploadedImageView.src = imageUrl;
-                    uploadedImageDiv.style.display = 'block';
+                    let uploadedImageDiv = $('#uploadedImage');
+                    let uploadedImageView = $('#uploadedImageView');
+
+                    uploadedImageView.attr('src', imageUrl);
+                    uploadedImageDiv.show();
+
+                    // Mostrar el modal de éxito
+                    $('#successModal').modal('show');
+
+                    // Reiniciar el formulario y ocultar elementos
+                    $('#washForm')[0].reset();
+                    resultDiv.hide();
+                    uploadedImageDiv.hide();
+                    $('#imageDateTime').text('');
+                    $('#imageLatitude').text('');
+                    $('#imageLongitude').text('');
+
+                    // Cerrar el modal automáticamente después de 3 segundos
+                    setTimeout(function() {
+                        $('#successModal').modal('hide');
+                    }, 3000);
                 } else {
-                    alertDiv.classList.remove('alert-info');
-                    alertDiv.classList.add('alert-danger');
-                    alertDiv.textContent = 'Error al registrar la tarea. Por favor, intente nuevamente.';
+                    alertDiv.removeClass('alert-info').addClass('alert-danger').text('Error al registrar la tarea. Por favor, intente nuevamente.');
                 }
             })
             .catch(error => {
-                alertDiv.classList.remove('alert-info');
-                alertDiv.classList.add('alert-danger');
-                alertDiv.textContent = 'Hubo un error al procesar la solicitud. Por favor, intente nuevamente.';
+                alertDiv.removeClass('alert-info').addClass('alert-danger').text('Hubo un error al procesar la solicitud. Por favor, intente nuevamente.');
                 console.error('Error:', error);
             });
         });
-    
-    </script>
+
+         // Event listener to close the modal manually
+         $('#successModal').on('click', '.close, .btn-secondary', function() {
+            $('#successModal').modal('hide');
+        });
+
+        // Additional code to ensure the modal can be closed using 'X' and 'Cerrar' button
+        $('#successModal').on('hidden.bs.modal', function () {
+            $('#result').hide();
+            $('#uploadedImage').hide();
+        });
+
+        
+
+        
+    });
+</script>
 
 {% endblock %}
