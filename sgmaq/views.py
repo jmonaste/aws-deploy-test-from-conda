@@ -172,7 +172,6 @@ def handle_uploaded_file(f):
         file_name = default_storage.save(file_path, ContentFile(f.read()))
         return file_name
     except Exception as e:
-        # Handle exceptions, log error or raise it
         print(f"Error uploading file: {e}")
         raise
 
@@ -293,7 +292,7 @@ def task_overview(request):
     return render(request, 'tasks/task_overview.html', {
         'tasks': tasks,
         'task_data_json': json.dumps(task_data),
-        'task_counts': json.dumps(task_counts_list),  # Pass as JSON string
+        'task_counts': json.dumps(task_counts_list)
     })
 
 
